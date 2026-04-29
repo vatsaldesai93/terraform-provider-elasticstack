@@ -63,7 +63,8 @@ testacc:
 	  --rerun-fails=$(RERUN_FAILS) \
 	  --rerun-fails-max-failures=$(RERUN_FAILS_MAX_FAILURES) \
 	  --packages="$(shell go list ./... \
-	    | awk 'NR % $(ACCTEST_TOTAL_SHARDS) == $(ACCTEST_SHARD_INDEX)')" \
+	    | sort \
+	    | awk '(NR-1) % $(ACCTEST_TOTAL_SHARDS) == $(ACCTEST_SHARD_INDEX)')" \
 	  -- -p $(ACCTEST_PACKAGE_PARALLELISM) \
 	     -v \
 	     -count $(ACCTEST_COUNT) \
