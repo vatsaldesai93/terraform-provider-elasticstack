@@ -2,6 +2,50 @@
 
 ### Breaking changes
 
+- The documented minimum supported Elastic Stack version is now 8.0. 7.x is no longer included in the acceptance test matrix or officially supported. Compatibility branches and version gates for pre-8.0 Elasticsearch behavior have been removed from the transform and ILM resources.
+- Fleet Docker image fallback no longer applies to 7.17.x.
+
+---
+*OpenSpec change: `remove-7x-support`*
+
+<!-- Macroscope's pull request summary starts here -->
+<!-- Macroscope will only edit the content between these invisible markers, and the markers themselves will not be visible in the GitHub rendered markdown. -->
+<!-- If you delete either of the start / end markers from your PR's description, Macroscope will append its summary at the bottom of the description. -->
+> [!NOTE]
+> ### Drop Elastic Stack 7.x support from the Terraform provider
+> - Removes version gates, skip functions, and minimum-version checks throughout the provider that targeted 7.x Elasticsearch and Kibana releases.
+> - Simplifies transform client code in [`transform.go`](https://github.com/elastic/terraform-provider-elasticstack/pull/2554/files#diff-c5611655a9ef46e156ce0ac3cf457f52e8e35c3da9df2b22a17b99f11036c29f) by removing server version checks; timeout parameters are now always passed to Put/Update/Start/Stop Transform API calls.
+> - Removes 7.x entries from the `settingsRequiredVersions` map in [`transform.go`](https://github.com/elastic/terraform-provider-elasticstack/pull/2554/files#diff-b7b07f886444c2b6923216307080f8f1784d6d0ea695fe71dc4fb9f0f997161d); only 8.x-gated fields remain subject to version checks.
+> - Removes the `7.17.%` Fleet image fallback in the [`Makefile`](https://github.com/elastic/terraform-provider-elasticstack/pull/2554/files#diff-76ed074a9305c04054cdebb9e9aad2d818052b07091de1f20cad0bbac34ffb52); the Docker Hub fallback for `elastic/elastic-agent` now applies only to `8.0.%` and `8.1.%`.
+> - Updates README and generated docs to reflect the new 8.0+ minimum supported version.
+>
+> <!-- Macroscope's review summary starts here -->
+>
+> <sup><a href="https://app.macroscope.com">Macroscope</a> summarized d3eadaf.</sup>
+> <!-- Macroscope's review summary ends here -->
+>
+<!-- macroscope-ui-refresh -->
+<!-- Macroscope's pull request summary ends here -->
+
+N/A - This is an internal refactoring with no user-facing changes.}
+
+<!-- Macroscope's pull request summary starts here -->
+<!-- Macroscope will only edit the content between these invisible markers, and the markers themselves will not be visible in the GitHub rendered markdown. -->
+<!-- If you delete either of the start / end markers from your PR's description, Macroscope will append its summary at the bottom of the description. -->
+> [!NOTE]
+> ### Rename `resourcecore` package to `entitycore` and archive related specs
+> - Renames the internal package from `resourcecore` to `entitycore` and moves the associated openspec change documents to the archive under `openspec/changes/archive/2026-04-28-rename-resourcecore-to-entitycore/`.
+> - Replaces the `provider-framework-resource-core` spec with a new `provider-framework-entity-core` spec covering `ResourceBase`, `DataSourceBase`, type-name construction, and `Configure` semantics.
+> - Adds a test case in [data_source_base_test.go](https://github.com/elastic/terraform-provider-elasticstack/pull/2534/files#diff-9b877bc3cc5766b4efdfa9ed4964afce78eff370efa291b28cd102cdf1b43df2) verifying that passing an untyped nil `ProviderData` clears a previously set client factory without error.
+>
+> <!-- Macroscope's review summary starts here -->
+>
+> <sup><a href="https://app.macroscope.com">Macroscope</a> summarized c6ef68a.</sup>
+> <!-- Macroscope's review summary ends here -->
+>
+<!-- macroscope-ui-refresh -->
+<!-- Macroscope's pull request summary ends here -->
+
 
 #### `elasticstack_kibana_security_detection_rule` action `params` format change
 
@@ -43,6 +87,9 @@ resource "elasticstack_kibana_security_detection_rule" "test" {
 
 ### Changes
 
+- Add generic envelope constructors for Kibana and Elasticsearch data sources to eliminate Read() boilerplate. ([#2547](https://github.com/elastic/terraform-provider-elasticstack/pull/2547))
+- Drop Elastic Stack 7.x support floor. The provider now documents and tests against Elastic Stack 8.0+. ([#2554](https://github.com/elastic/terraform-provider-elasticstack/pull/2554))
+- Fix perpetual plan drift on elasticstack_elasticsearch_index mappings when an index template injects additional mapping content. ([#2542](https://github.com/elastic/terraform-provider-elasticstack/pull/2542))
 - Align Kibana SLO KQL schema and API mapping with object-form filters, settings, artifacts, and enabled state. ([#2495](https://github.com/elastic/terraform-provider-elasticstack/pull/2495))
 - `elasticstack_kibana_space` now correctly clears `description`, `initials`, `color`, and `image_url` when the configuration sets them to an empty string. Previously those explicit empty-string assignments were silently dropped from the outbound API request and Kibana retained the prior value. ([#2452](https://github.com/elastic/terraform-provider-elasticstack/pull/2452))
 - elasticstack_fleet_agent_policy no longer errors with "Provider produced inconsistent result" when the Fleet API returns an empty description for a policy whose description is unset in the Terraform configuration. ([#2448](https://github.com/elastic/terraform-provider-elasticstack/pull/2448))
@@ -55,10 +102,6 @@ resource "elasticstack_kibana_security_detection_rule" "test" {
 - Change `elasticstack_kibana_security_detection_rule.actions[].params` to a JSON string rather than a map of string values. This allows setting arbitrary, nested param values ([#2340](https://github.com/elastic/terraform-provider-elasticstack/pull/2340))
 - Add import support to the elasticstack_elasticsearch_enrich_policy resource ([#2427](https://github.com/elastic/terraform-provider-elasticstack/pull/2427))
 - Add ssl.verification_mode attribute to the elasticstack_fleet_output ssl block ([#2415](https://github.com/elastic/terraform-provider-elasticstack/pull/2415))
-
-### Fixed
-
-- Fixed perpetual plan drift on `elasticstack_elasticsearch_index` `mappings` when an index template injects additional mapping content (such as `dynamic_templates`, `properties`, or `_meta`). The provider now uses semantic equality so that template-injected mappings are treated as non-drift, eliminating the need for `lifecycle { ignore_changes = [mappings] }` workarounds. ([#563](https://github.com/elastic/terraform-provider-elasticstack/issues/563))
 
 ## [0.14.5] - 2026-04-21
 
