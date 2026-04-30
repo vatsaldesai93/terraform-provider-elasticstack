@@ -77655,8 +77655,10 @@ type GetStreamsNameSignificantEventsJSONBody struct {
 
 // GetStreamsNameSignificantEventsParams defines parameters for GetStreamsNameSignificantEvents.
 type GetStreamsNameSignificantEventsParams struct {
-	From       string `form:"from" json:"from"`
-	To         string `form:"to" json:"to"`
+	From string `form:"from" json:"from"`
+	To   string `form:"to" json:"to"`
+
+	// BucketSize The bucket size for aggregating events (e.g. "1m", "1h").
 	BucketSize string `form:"bucketSize" json:"bucketSize"`
 
 	// Query Query string to filter significant events on metadata fields
@@ -77687,6 +77689,11 @@ type PostStreamsNameSignificantEventsGenerateJSONBody struct {
 type PostStreamsNameSignificantEventsGenerateParams struct {
 	// ConnectorId Optional connector ID. If not provided, the default AI connector from settings will be used.
 	ConnectorId *string `form:"connectorId,omitempty" json:"connectorId,omitempty"`
+	From        string  `form:"from" json:"from"`
+	To          string  `form:"to" json:"to"`
+
+	// SampleDocsSize Number of sample documents to use for generation from the current data of stream
+	SampleDocsSize *float32 `form:"sampleDocsSize,omitempty" json:"sampleDocsSize,omitempty"`
 }
 
 // PostStreamsNameSignificantEventsGenerateJSONBody0 defines parameters for PostStreamsNameSignificantEventsGenerate.
@@ -77709,8 +77716,10 @@ type PostStreamsNameSignificantEventsPreviewJSONBody struct {
 
 // PostStreamsNameSignificantEventsPreviewParams defines parameters for PostStreamsNameSignificantEventsPreview.
 type PostStreamsNameSignificantEventsPreviewParams struct {
-	From       string `form:"from" json:"from"`
-	To         string `form:"to" json:"to"`
+	From string `form:"from" json:"from"`
+	To   string `form:"to" json:"to"`
+
+	// BucketSize The bucket size for aggregating events (e.g. "1m", "1h").
 	BucketSize string `form:"bucketSize" json:"bucketSize"`
 }
 
@@ -178800,6 +178809,46 @@ func NewPostStreamsNameSignificantEventsGenerateRequestWithBody(server string, n
 
 		}
 
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+		if params.SampleDocsSize != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "sampleDocsSize", *params.SampleDocsSize, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "number", Format: ""}); err != nil {
+				return nil, err
+			} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+				return nil, err
+			} else {
+				for k, v := range parsed {
+					for _, v2 := range v {
+						queryValues.Add(k, v2)
+					}
+				}
+			}
+
+		}
+
 		queryURL.RawQuery = queryValues.Encode()
 	}
 
@@ -193357,6 +193406,7 @@ func (r CreateRuleExceptionListItemsResponse) StatusCode() int {
 type SetAlertAssigneesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
+	JSON200      *map[string]interface{}
 	JSON400      *struct {
 		union json.RawMessage
 	}
@@ -224542,6 +224592,13 @@ func ParseSetAlertAssigneesResponse(rsp *http.Response) (*SetAlertAssigneesRespo
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest map[string]interface{}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 400:
 		var dest struct {
 			union json.RawMessage
